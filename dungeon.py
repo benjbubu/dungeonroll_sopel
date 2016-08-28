@@ -81,7 +81,10 @@ class DungeonRollGame:
 
 
 	def pillerButin(self):
-		pass
+		if not self.monstres
+			self.afficher("Phase de loot a developper")
+		else :
+			pass
 
 	def reflechirAvenir(self):
 		# pour l'instant on continue toujours
