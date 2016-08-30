@@ -25,10 +25,8 @@ class DungeonRollGame:
         # Lancement des dés du joueur
         self.afficher("Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne")
         self.player_hand = []
-
         for i in range(1, 7):
-            self.player_hand.append(random.choice(list(self.compagnons.keys())))
-        self.afficher(self.player_hand)
+            self.lancer_dé_joueur()
 
         # Tour de jeu
         self.continuer_partie = True
@@ -48,19 +46,15 @@ class DungeonRollGame:
         self.monstres = []
         self.loot = []
         for i in range(self.niveau_donjon):
-            lancer_de = random.choice(self.mjdice)
-            if lancer_de == "Dragon":
-                self.antre_dragon.append(lancer_de)
-            elif lancer_de in ("Coffre", "Potion"):
-                self.loot.append(lancer_de)
-            else: 
-                self.monstres.append(lancer_de)
-
-        self.afficher(str(self.antre_dragon) + str(self.loot) + str(self.monstres))    
+            self.lancer_dé_MJ()
 
     def bastonner(self):
         exploration = "Succes"
         while self.monstres:
+            # afficher les mains
+            self.afficher_main_joueur()
+            self.afficher_main_MJ()
+
             # Choisir une action 
             possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir"]
             self.afficher(str(possibilites))
@@ -98,28 +92,80 @@ class DungeonRollGame:
         else:
             self.continuer_partie = False
 
-
     def utiliser_compagnon(self):
         # choix du compagnon
         for i in range(len(self.player_hand)):
             self.afficher(str(i) + " : " + str(self.player_hand[i]))
         compagnon = self.player_hand[int(self.recuperer("Lequel ?"))]
 
-        # choix de la cible
-        self.afficher(self.monstres)
-        cible = self.recuperer("ON BUTE QUI ?")
-         
-        # creation de cadavres
-        if cible in self.compagnons[compagnon]:
-            # cible favorite : on supprime tous les monstres similaires
-            while cible in self.monstres:
-                self.monstres.remove(cible)
-        else:
-            # on n'en supprime qu'un
-            self.monstres.remove(cible)
-
         # retirer le compagnon utilisé
         self.player_hand.remove(compagnon)
+
+        if compagnon == "Parchemin" :
+            # Gestion du cas parchemin : on relance un dé quelqu'il soit sauf Dragon
+            self.afficher("Vous pouvez relancer un dé")
+
+            for i in range(len(self.player_hand) + len(self.loot) + len(self.monstres)):
+                if i < len(self.player_hand):
+                    self.afficher(str(i) + " : " + str(self.player_hand[i]))
+                elif i < len(self.player_hand) + len(self.loot):
+                    self.afficher(str(i) + " : " + str(self.loot[i - len(self.player_hand)]))
+                else:
+                    self.afficher(str(i) + " : " + str(self.monstres[i - len(self.player_hand) - len(self.loot)]))
+            choix = self.recuperer("Quel dé voulez-vous relancer ?")
+            choix = int(choix)
+            ajouté = ""
+            if choix < len(self.player_hand):
+                choix = self.player_hand[choix]
+                self.player_hand.remove(choix)
+                ajouté = self.lancer_dé_joueur()
+            elif choix < len(self.player_hand) + len(self.loot):
+                choix = self.loot[choix - len(self.player_hand)]
+                self.loot.remove(choix)
+                ajouté = self.lancer_dé_MJ()
+            else:
+                choix = self.monstres[choix - len(self.player_hand) - len(self.loot)]
+                self.monstres.remove(choix)
+                ajouté = self.lancer_dé_MJ()
+
+            self.afficher("Vous avez choisi de relancer : " + choix)
+            self.afficher(ajouté + " a été tiré")
+
+        else:
+            # choix de la cible
+            self.afficher(self.monstres)
+            cible = self.recuperer("ON BUTE QUI ?")
+
+            # creation de cadavres
+            if cible in self.compagnons[compagnon]:
+                # cible favorite : on supprime tous les monstres similaires
+                while cible in self.monstres:
+                    self.monstres.remove(cible)
+            else:
+                # on n'en supprime qu'un
+                self.monstres.remove(cible)
+
+    def lancer_dé_MJ(self):
+        # Lancer le dé du mj
+        lancer_de = random.choice(self.mjdice)
+        if lancer_de == "Dragon":
+            self.antre_dragon.append(lancer_de)
+        elif lancer_de in ("Coffre", "Potion"):
+            self.loot.append(lancer_de)
+        else:
+            self.monstres.append(lancer_de)
+        return lancer_de
+
+    def lancer_dé_joueur(self):
+        lancer_dé = random.choice(list(self.compagnons.keys()))
+        self.player_hand.append(lancer_dé)
+        return lancer_dé
+
+    def afficher_main_joueur(self):
+        self.afficher(str(self.player_hand))
+
+    def afficher_main_MJ(self):
+        self.afficher(str(self.antre_dragon) + str(self.loot) + str(self.monstres))
 
     def afficher(self, msg):
         print(msg)
