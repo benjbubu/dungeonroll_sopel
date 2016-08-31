@@ -32,7 +32,7 @@ class DungeonRollGame:
         self.continuer_partie = True
         while self.continuer_partie:
             self.entrer_dans_donjon()
-            if self.bastonner() == "Succes":
+            if self.gerer_baston() == "Succes":
                 self.piller_butin()
                 self.reflechir_avenir()
             
@@ -48,7 +48,7 @@ class DungeonRollGame:
         for i in range(self.niveau_donjon):
             self.lancer_dé_MJ()
 
-    def bastonner(self):
+    def gerer_baston(self):
         exploration = "Succes"
         while self.monstres:
             # afficher les mains
@@ -102,48 +102,9 @@ class DungeonRollGame:
         self.player_hand.remove(compagnon)
 
         if compagnon == "Parchemin" :
-            # Gestion du cas parchemin : on relance un dé quelqu'il soit sauf Dragon
-            self.afficher("Vous pouvez relancer un dé")
-
-            for i in range(len(self.player_hand) + len(self.loot) + len(self.monstres)):
-                if i < len(self.player_hand):
-                    self.afficher(str(i) + " : " + str(self.player_hand[i]))
-                elif i < len(self.player_hand) + len(self.loot):
-                    self.afficher(str(i) + " : " + str(self.loot[i - len(self.player_hand)]))
-                else:
-                    self.afficher(str(i) + " : " + str(self.monstres[i - len(self.player_hand) - len(self.loot)]))
-            choix = self.recuperer("Quel dé voulez-vous relancer ?")
-            choix = int(choix)
-            ajouté = ""
-            if choix < len(self.player_hand):
-                choix = self.player_hand[choix]
-                self.player_hand.remove(choix)
-                ajouté = self.lancer_dé_joueur()
-            elif choix < len(self.player_hand) + len(self.loot):
-                choix = self.loot[choix - len(self.player_hand)]
-                self.loot.remove(choix)
-                ajouté = self.lancer_dé_MJ()
-            else:
-                choix = self.monstres[choix - len(self.player_hand) - len(self.loot)]
-                self.monstres.remove(choix)
-                ajouté = self.lancer_dé_MJ()
-
-            self.afficher("Vous avez choisi de relancer : " + choix)
-            self.afficher(ajouté + " a été tiré")
-
+            self.utiliser_parchemin()
         else:
-            # choix de la cible
-            self.afficher(self.monstres)
-            cible = self.recuperer("ON BUTE QUI ?")
-
-            # creation de cadavres
-            if cible in self.compagnons[compagnon]:
-                # cible favorite : on supprime tous les monstres similaires
-                while cible in self.monstres:
-                    self.monstres.remove(cible)
-            else:
-                # on n'en supprime qu'un
-                self.monstres.remove(cible)
+            self.bastonner(compagnon)
 
     def lancer_dé_MJ(self):
         # Lancer le dé du mj
@@ -160,6 +121,56 @@ class DungeonRollGame:
         lancer_dé = random.choice(list(self.compagnons.keys()))
         self.player_hand.append(lancer_dé)
         return lancer_dé
+
+    def utiliser_parchemin(self):
+        # Gestion du cas parchemin : on relance un dé quelqu'il soit sauf Dragon
+        self.afficher("Vous pouvez relancer un dé")
+
+        # afficher avec un index successivement les mains du joueur, du mj (loot, monstres)
+        for i in range(len(self.player_hand) + len(self.loot) + len(self.monstres)):
+            if i < len(self.player_hand):
+                self.afficher(str(i) + " : " + str(self.player_hand[i]))
+            elif i < len(self.player_hand) + len(self.loot):
+                self.afficher(str(i) + " : " + str(self.loot[i - len(self.player_hand)]))
+            else:
+                self.afficher(str(i) + " : " + str(self.monstres[i - len(self.player_hand) - len(self.loot)]))
+
+        # choisir le dé à relancer
+        choix = self.recuperer("Quel dé voulez-vous relancer ?")
+        choix = int(choix)
+
+        # enlever ce dé et selon la catégorie relancer le dé et l'affecter dans la bonne main
+        ajouté = ""
+        if choix < len(self.player_hand):
+            choix = self.player_hand[choix]
+            self.player_hand.remove(choix)
+            ajouté = self.lancer_dé_joueur()
+        elif choix < len(self.player_hand) + len(self.loot):
+            choix = self.loot[choix - len(self.player_hand)]
+            self.loot.remove(choix)
+            ajouté = self.lancer_dé_MJ()
+        else:
+            choix = self.monstres[choix - len(self.player_hand) - len(self.loot)]
+            self.monstres.remove(choix)
+            ajouté = self.lancer_dé_MJ()
+
+        # afficher les changements
+        self.afficher("Vous avez choisi de relancer : " + choix)
+        self.afficher(ajouté + " a été tiré")
+
+    def bastonner(self, compagnon):
+        # choix de la cible
+        self.afficher(self.monstres)
+        cible = self.recuperer("ON BUTE QUI ?")
+
+        # creation de cadavres
+        if cible in self.compagnons[compagnon]:
+            # cible favorite : on supprime tous les monstres similaires
+            while cible in self.monstres:
+                self.monstres.remove(cible)
+        else:
+            # on n'en supprime qu'un
+            self.monstres.remove(cible)
 
     def afficher_main_joueur(self):
         self.afficher(str(self.player_hand))
