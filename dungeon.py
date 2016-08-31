@@ -8,14 +8,25 @@ class DungeonRollGame:
         # self.playerdice = ['Guerrier', 'Voleur', 'Mage', 'Clerc', 'Champion', 'Parchemin']
         self.compagnons = {
             "Guerrier"  : [ "Gobelin" ],
-            "Voleur"    : [ ],
+            "Voleur"    : [],
             "Mage"      : [ "Blob" ],
             "Clerc"     : [ "Squelette" ],
             "Champion"  : [ "Gobelin", "Blob", "Squelette"],
             "Parchemin" : []
         }
         self.mjdice = ['Gobelin', 'Blob', 'Squelette', 'Coffre', 'Dragon', 'Potion']
-        self.tresor = ['Portail de ville', 'Appat de Dragon', 'Anneau dinvisibilite', 'Potion', 'Parchemin', 'Epee Vorpale', 'Talisman', 'Sceptre de Pouvoir', 'Outil de Voleur']
+        self.tresor = [
+                'Portail de ville',     # Fin de la partie avec décompte des points
+                'Appat de Dragon',      # transforme les dés monstres en dé dragon
+                'Anneau dinvisibilite', # retire les dés de l'antre du dragon (ne le vainc pas)
+                'Potion',               # permet de récupérer 1 seul dé joueur
+                'Parchemin',            # = dé parchemin
+                'Epee Vorpale',         # = dé guerrier
+                'Talisman',             # = dé clerc
+                'Sceptre de Pouvoir',   # = dé mage 
+                'Outil de Voleur',      # = dé voleur
+                'Ecaille du dragon'     # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
+                ]
         self.antre_dragon = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
@@ -28,6 +39,12 @@ class DungeonRollGame:
         for i in range(1, 7):
             self.lancer_dé_joueur()
 
+        # Initialisation de l'inventaire pour récupérer les trésors
+        self.inventaire = []
+
+        # Initialisation du cimetière (=dé joueurs utilisés)
+        self.cimetiere = []
+            
         # Tour de jeu
         self.continuer_partie = True
         while self.continuer_partie:
@@ -98,8 +115,9 @@ class DungeonRollGame:
             self.afficher(str(i) + " : " + str(self.player_hand[i]))
         compagnon = self.player_hand[int(self.recuperer("Lequel ?"))]
 
-        # retirer le compagnon utilisé
+        # retirer le compagnon utilisé et le place au cimetière
         self.player_hand.remove(compagnon)
+        self.cimetiere.append(compagnon)
 
         if compagnon == "Parchemin" :
             self.utiliser_parchemin()
@@ -142,14 +160,17 @@ class DungeonRollGame:
         # enlever ce dé et selon la catégorie relancer le dé et l'affecter dans la bonne main
         ajouté = ""
         if choix < len(self.player_hand):
+            # player_hand
             choix = self.player_hand[choix]
             self.player_hand.remove(choix)
             ajouté = self.lancer_dé_joueur()
         elif choix < len(self.player_hand) + len(self.loot):
+            # loot
             choix = self.loot[choix - len(self.player_hand)]
             self.loot.remove(choix)
             ajouté = self.lancer_dé_MJ()
         else:
+            # monstres
             choix = self.monstres[choix - len(self.player_hand) - len(self.loot)]
             self.monstres.remove(choix)
             ajouté = self.lancer_dé_MJ()
@@ -173,7 +194,8 @@ class DungeonRollGame:
             self.monstres.remove(cible)
 
     def afficher_main_joueur(self):
-        self.afficher(str(self.player_hand))
+        self.afficher("main joueur : " + str(self.player_hand))
+        self.afficher("cimetiere : " + str(self.cimetiere))
 
     def afficher_main_MJ(self):
         self.afficher(str(self.antre_dragon) + str(self.loot) + str(self.monstres))
