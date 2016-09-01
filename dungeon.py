@@ -2,7 +2,6 @@ import random
 
 
 class DungeonRollGame:
-
     def __init__(self):
         # Declaration des items trouvables dans les de et des loot pour les random
         # self.playerdice = ['Guerrier', 'Voleur', 'Mage', 'Clerc', 'Champion', 'Parchemin']
@@ -14,7 +13,14 @@ class DungeonRollGame:
             "Champion"  : [ "Gobelin", "Blob", "Squelette"],
             "Parchemin" : []
         }
-        self.mjdice = ['Gobelin', 'Blob', 'Squelette', 'Coffre', 'Dragon', 'Potion']
+        self.mjdice = [
+            'Gobelin',
+            'Blob',
+            'Squelette',
+            'Coffre',       # utiliser un compagnon pour en ouvrir un, un voleur pour les ouvrir tous - donne un trésor
+            'Dragon',
+            'Potion'        # Utiliser un compagnon pour récupérer, Usage immédiat, réssuscite tous les compagnons du cimetière
+        ]
         self.tresor = [
                 'Portail de ville',     # Fin de la partie avec décompte des points
                 'Appat de Dragon',      # transforme les dés monstres en dé dragon
@@ -30,11 +36,12 @@ class DungeonRollGame:
         self.antre_dragon = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
-        self.niveau_donjon = 9
+        self.niveau_donjon = 6
         self.niveau_hero = 1
 
         # Lancement des dés du joueur
-        self.afficher("Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne")
+        self.afficher(
+            "Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne")
         self.player_hand = []
         for i in range(1, 7):
             self.lancer_dé_joueur()
@@ -44,17 +51,23 @@ class DungeonRollGame:
 
         # Initialisation du cimetière (=dé joueurs utilisés)
         self.cimetiere = []
-            
+
         # Tour de jeu
         self.continuer_partie = True
         while self.continuer_partie:
             self.entrer_dans_donjon()
-            if self.gerer_baston() == "Succes":
+            if self.gerer_phase_baston() == "Succes":
                 self.piller_butin()
                 self.reflechir_avenir()
-            
-        # Fin de la partie => calcul score 
+
+        # Fin de la partie => calcul score
         self.afficher("C'est la FIN")
+        if self.exploration == "Succes":
+            # calcul du score
+            self.afficher("Calcul du score")
+            self.afficher("fonction à implémenter :p ")
+        else:
+            self.afficher("C'est la FIN, t'as perdu, 0 point !")
 
     def entrer_dans_donjon(self):
         self.afficher("Vous arrivez au niveau " + str(self.niveau_donjon) + ". Des monstres apparaissent !")
@@ -65,8 +78,8 @@ class DungeonRollGame:
         for i in range(self.niveau_donjon):
             self.lancer_dé_MJ()
 
-    def gerer_baston(self):
-        exploration = "Succes"
+    def gerer_phase_baston(self):
+        self.exploration = "Succes"
         while self.monstres:
             # afficher les mains
             self.afficher_main_joueur()
@@ -76,23 +89,86 @@ class DungeonRollGame:
             possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir"]
             self.afficher(str(possibilites))
             choix = self.recuperer("Que souhaitez-vous faire ?")
+            self.afficher("vous avez choisi : " + choix)
 
-            self.afficher("vous avez choisi : " + choix) 
-            
             # Résolution de l'action
             if choix in ("FU", "Fuir", "FUir", "fuir", "F", "f"):
                 self.continuer_partie = False
-                exploration = "Echec"
+                self.exploration = "Echec"
                 break
             elif choix in ("TR", "TRésor", "Trésor", "trésor", "TResor", "Tresor", "tresor", "T", "t"):
                 self.afficher("Fonction non implémentée")
             elif choix in ("COmpagnon", "Compagnon", "compagnon", "C", "c"):
                 self.utiliser_compagnon()
 
-        return exploration  # "Echec" ou "Succes"
+        return self.exploration  # "Echec" ou "Succes"
 
     def piller_butin(self):
-        pass
+        while True:
+            # Reste-t-il du loot ?
+            if not self.loot:
+                break
+
+            # choix action = coffre ou potion (dé) ou  abandonner le loot
+            self.afficher_main_joueur()
+            choix = self.recuperer("Ouvrez un COffre, buvez une POtion ou ABandonner le loot")
+
+            if choix in ('POtion', "Potion", "potion", "PO", "Po", "po", "P", "p"):
+                if "Potion" not in self.loot:
+                    self.afficher("Petit boulet, y'a pas de potion !")
+                    continue  # go to the next iteration (while) => reproposer les actions
+
+                # rappel de la règle
+                self.afficher("Utilisez un compagnon pour boire une potion qui ressuscitera tous les autres compagnons du cimetière")
+
+                compagnon = self.choisir_compagnon()
+
+                # ressusciter tous les compagnons
+                for mercenaire in set(self.cimetiere):
+                    self.cimetiere.remove(mercenaire)
+                    self.player_hand.append(mercenaire)
+
+                # retirer le compagnon utilisé et le placer au cimetière
+                self.player_hand.remove(compagnon)
+                self.cimetiere.append(compagnon)
+
+            elif choix in ("COffre", "Coffre", "coffre", "CO", "Co", "co", "C", "c"):
+                if "Coffre" not in self.loot:
+                    self.afficher("Y'a pas de Coffre, boulet va !")
+                    continue  # go to the next iteration (while) => reproposer les actions
+
+                # rappel de la règle
+                self.afficher("Utilisez n'importe lequel de vos compagnons pour ouvrir un coffre,")
+                self.afficher("un voleur pour les ouvrirs tous")
+
+                compagnon = self.choisir_compagnon()
+
+                # action = ouvrir un ou plusieurs coffres
+                if compagnon == "Voleur":
+                    # décompte du nombre de coffres
+                    nb_coffres = self.loot.count("Coffre")
+
+                    for i in range(nb_coffres):
+                        self.ouvrir_coffre()
+
+                else:
+                    if "Coffre" in self.loot:
+                        self.ouvrir_coffre()
+
+                # retirer le compagnon utilisé et le placer au cimetière
+                self.player_hand.remove(compagnon)
+                self.cimetiere.append(compagnon)
+
+            elif choix in ("ABandonner", "Abandonner", "abandonner", "AB", "Ab", "ab", "A", "a"):
+                break
+
+    def ouvrir_coffre(self):
+        self.loot.remove("Coffre")
+
+        # tirer trésor
+        tresor = random.choice(self.tresor)
+        self.inventaire.append(tresor)
+        self.afficher("Vous avez trouvé : " + str(tresor))
 
     def reflechir_avenir(self):
         # donjon max = niv 10 => fin de la partie
@@ -110,19 +186,22 @@ class DungeonRollGame:
             self.continuer_partie = False
 
     def utiliser_compagnon(self):
-        # choix du compagnon
-        for i in range(len(self.player_hand)):
-            self.afficher(str(i) + " : " + str(self.player_hand[i]))
-        compagnon = self.player_hand[int(self.recuperer("Lequel ?"))]
+        compagnon = self.choisir_compagnon()
 
         # retirer le compagnon utilisé et le place au cimetière
         self.player_hand.remove(compagnon)
         self.cimetiere.append(compagnon)
 
-        if compagnon == "Parchemin" :
+        if compagnon == "Parchemin":
             self.utiliser_parchemin()
         else:
             self.bastonner(compagnon)
+
+    def choisir_compagnon(self):
+        # choix du compagnon par l'index
+        for i in range(len(self.player_hand)):
+            self.afficher(str(i) + " : " + str(self.player_hand[i]))
+        return self.player_hand[int(self.recuperer("Lequel ?"))]
 
     def lancer_dé_MJ(self):
         # Lancer le dé du mj
@@ -196,6 +275,7 @@ class DungeonRollGame:
     def afficher_main_joueur(self):
         self.afficher("main joueur : " + str(self.player_hand))
         self.afficher("cimetiere : " + str(self.cimetiere))
+        self.afficher("inventaire : " + str(self.inventaire))
 
     def afficher_main_MJ(self):
         self.afficher(str(self.antre_dragon) + str(self.loot) + str(self.monstres))
@@ -209,5 +289,3 @@ class DungeonRollGame:
 
 if __name__ == "__main__":
     DungeonRollGame()
-
-
