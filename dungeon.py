@@ -3,8 +3,7 @@ import random
 
 class DungeonRollGame:
     def __init__(self):
-        # Declaration des items trouvables dans les de et des loot pour les random
-        # self.playerdice = ['Guerrier', 'Voleur', 'Mage', 'Clerc', 'Champion', 'Parchemin']
+        # Declaration des items trouvables dans les dés et des loot pour les random
         self.compagnons = {
             "Guerrier"  : [ "Gobelin" ],
             "Voleur"    : [],
@@ -33,7 +32,13 @@ class DungeonRollGame:
                 'Outil de Voleur',      # = dé voleur
                 'Ecaille du dragon'     # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
                 ]
+
+        # Initialisation des différents conteneurs de dés ou objets
+        self.inventaire = []
+        self.cimetiere = []
         self.antre_dragon = []
+        self.monstres = []
+        self.loot = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
         self.niveau_donjon = 6
@@ -46,20 +51,17 @@ class DungeonRollGame:
         for i in range(1, 7):
             self.lancer_dé_joueur()
 
-        # Initialisation de l'inventaire pour récupérer les trésors
-        self.inventaire = []
-
-        # Initialisation du cimetière (=dé joueurs utilisés)
-        self.cimetiere = []
-
         # Tour de jeu
         self.continuer_partie = True
+        self.exploration = "Succes"
         while self.continuer_partie:
             self.entrer_dans_donjon()
             if self.gerer_phase_baston() == "Succes":
                 self.piller_butin()
                 self.reflechir_avenir()
+        self.clore_la_partie()
 
+    def clore_la_partie(self):
         # Fin de la partie => calcul score
         self.afficher("C'est la FIN")
         if self.exploration == "Succes":
@@ -68,6 +70,9 @@ class DungeonRollGame:
             self.afficher("fonction à implémenter :p ")
         else:
             self.afficher("C'est la FIN, t'as perdu, 0 point !")
+
+        # peut être un peu violent ? ça marche en console en tt cas
+        exit()
 
     def entrer_dans_donjon(self):
         self.afficher("Vous arrivez au niveau " + str(self.niveau_donjon) + ". Des monstres apparaissent !")
@@ -102,6 +107,58 @@ class DungeonRollGame:
                 self.utiliser_compagnon()
 
         return self.exploration  # "Echec" ou "Succes"
+
+    def utiliser_tresor(self):
+        # choix trésor
+        for i in range(len(self.inventaire)):
+            self.afficher(str(i) + " : " + str(self.inventaire[i]))
+        tresor = self.player_hand[int(self.recuperer("Lequel ?"))]
+        self.afficher("Choisi : " + tresor)
+
+        # on le retire tout de suite de l'inventaire
+        self.inventaire.remove(tresor)
+
+        # résolution de l'action du trésor
+        if tresor == 'Portail de ville':     # Fin de la partie avec décompte des points
+            self.exploration = "Succes"
+            self.clore_la_partie()
+
+        elif tresor == 'Appat de Dragon':    # transforme les dés monstres en dé dragon:
+            for i in range(len(self.monstres)):
+                self.antre_dragon.append("Dragon")
+            self.monstres = []
+
+        elif tresor == 'Anneau dinvisibilite': # retire les dés de l'antre du dragon (ne le vainc pas)
+            self.antre_dragon = []
+
+        elif tresor == 'Potion':               # permet de récupérer 1 seul dé joueur
+            self.afficher("Vous pouvez ressusciter un compagnon")
+            # choix du compagnon par l'index
+            for i in range(len(self.cimetiere)):
+                self.afficher(str(i) + " : " + str(self.cimetiere[i]))
+            compagnon = self.cimetiere[int(self.recuperer("Lequel ?"))]
+
+            # resurection
+            self.player_hand.append(compagnon)
+            self.cimetiere.remove(compagnon)
+
+        elif tresor == 'Parchemin':            # = dé parchemin
+            self.utiliser_parchemin()
+
+        elif tresor == 'Epee Vorpale':         # = dé guerrier
+            self.bastonner("Guerrier")
+
+        elif tresor == 'Talisman':             # = dé clerc
+            self.bastonner("Clerc")
+
+        elif tresor == 'Sceptre de Pouvoir':   # = dé mage
+            self.bastonner("Mage")
+
+        elif tresor == 'Outil de Voleur':      # = dé voleur
+            self.bastonner("Voleur")
+
+        elif tresor == 'Ecaille du dragon':    # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
+            self.afficher("les Ecailles du dragon comptent dans le décompte des points à la fin de la partie")
 
     def piller_butin(self):
         while True:
