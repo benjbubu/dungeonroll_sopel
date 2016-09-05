@@ -91,7 +91,7 @@ class DungeonRollGame:
             self.afficher_main_MJ()
 
             # Choisir une action 
-            possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir"]
+            possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir", "affronter le DRagon"]
             self.afficher(str(possibilites))
             choix = self.recuperer("Que souhaitez-vous faire ?")
             self.afficher("vous avez choisi : " + choix)
@@ -102,7 +102,7 @@ class DungeonRollGame:
                 self.exploration = "Echec"
                 break
             elif choix in ("TR", "TRésor", "Trésor", "trésor", "TResor", "Tresor", "tresor", "T", "t"):
-                self.afficher("Fonction non implémentée")
+                self.utiliser_tresor()
             elif choix in ("COmpagnon", "Compagnon", "compagnon", "C", "c"):
                 self.utiliser_compagnon()
 
@@ -134,13 +134,15 @@ class DungeonRollGame:
         elif tresor == 'Potion':               # permet de récupérer 1 seul dé joueur
             self.afficher("Vous pouvez ressusciter un compagnon")
             # choix du compagnon par l'index
-            for i in range(len(self.cimetiere)):
-                self.afficher(str(i) + " : " + str(self.cimetiere[i]))
-            compagnon = self.cimetiere[int(self.recuperer("Lequel ?"))]
+            index = []
+            for i, key in enumerate(self.compagnons.keys()):
+                self.afficher(str(i) + " : " + key)
+                index[i] = key
+            compagnon = index[int(self.recuperer("Lequel ?"))]
 
             # resurection
             self.player_hand.append(compagnon)
-            self.cimetiere.remove(compagnon)
+            self.cimetiere.pop()
 
         elif tresor == 'Parchemin':            # = dé parchemin
             self.utiliser_parchemin()
