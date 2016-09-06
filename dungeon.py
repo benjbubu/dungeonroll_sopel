@@ -39,15 +39,16 @@ class DungeonRollGame:
         self.antre_dragon = []
         self.monstres = []
         self.loot = []
+        self.player_hand = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
         self.niveau_donjon = 6
         self.niveau_hero = 1
 
+    def start(self):
         # Lancement des dés du joueur
         self.afficher(
             "Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne")
-        self.player_hand = []
         for i in range(1, 7):
             self.lancer_dé_joueur()
 
@@ -112,7 +113,7 @@ class DungeonRollGame:
         # choix trésor
         for i in range(len(self.inventaire)):
             self.afficher(str(i) + " : " + str(self.inventaire[i]))
-        tresor = self.player_hand[int(self.recuperer("Lequel ?"))]
+        tresor = self.inventaire[int(self.recuperer("Lequel ?"))]
         self.afficher("Choisi : " + tresor)
 
         # on le retire tout de suite de l'inventaire
@@ -137,7 +138,7 @@ class DungeonRollGame:
             index = []
             for i, key in enumerate(self.compagnons.keys()):
                 self.afficher(str(i) + " : " + key)
-                index[i] = key
+                index.append(key)
             compagnon = index[int(self.recuperer("Lequel ?"))]
 
             # resurection
@@ -347,4 +348,5 @@ class DungeonRollGame:
 
 
 if __name__ == "__main__":
-    DungeonRollGame()
+    partie = DungeonRollGame()
+    partie.start()

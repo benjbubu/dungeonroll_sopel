@@ -32,10 +32,16 @@ To be written :)
 
   * BONUS
     * limiter les choix aux actions possibles
+    
+  * Validation(s)
+    
 
 
 ## Bugs
 
   * FIXED - potion-trésor : on doit pouvoir choisir la face du dé compagnon qu'on récupère
-  
+  * Choix du monstre à tuer : se fait par un string, pas de vérification de s'il y a un élément portant ce nom => mettre en place un système par index
+  * saisie d'index hors gamme/hout-of-range => exception non gérée
+  * Possibilité d'utiliser les outils de voleur hors baston, pour ouvrir DES coffres par ex ?
+  * ne pas pouvoir utiliser les écailles de dragon
 
