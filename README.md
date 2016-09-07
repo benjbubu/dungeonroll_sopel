@@ -14,9 +14,11 @@ To be written :)
         * OK - tirage des monstres
       * OK - phase baston
         * OK - actions des compagnons 
-      * OK - phase butin
-        * OK -récupérer le loot
-        * Ok - utilisation des objets trésors
+      * phase butin
+        * récupérer le loot
+            * OK - utilisation d'un compagnon
+            * utilisation d'un objet/tresor ?
+        * OK - utilisation des objets trésors
       * OK - phase regroupement
     * Dragon
       * Déclenchement
@@ -32,6 +34,7 @@ To be written :)
 
   * BONUS
     * limiter les choix aux actions possibles
+    * OK -ajouter message selection funny dans la méthode choisir_par_index() (ex: ON BUTE QUI ?), utilisation d'un autre paramètre ?
     
   * Validation(s)
     
@@ -40,8 +43,8 @@ To be written :)
 ## Bugs
 
   * FIXED - potion-trésor : on doit pouvoir choisir la face du dé compagnon qu'on récupère
-  * Choix du monstre à tuer : se fait par un string, pas de vérification de s'il y a un élément portant ce nom => mettre en place un système par index
-  * saisie d'index hors gamme/hout-of-range => exception non gérée
+  * FIXED - Choix du monstre à tuer : se fait par un string, pas de vérification de s'il y a un élément portant ce nom => mettre en place un système par index
+  * FIXED - saisie d'index hors gamme/hout-of-range => exception non gérée
   * Possibilité d'utiliser les outils de voleur hors baston, pour ouvrir DES coffres par ex ?
   * ne pas pouvoir utiliser les écailles de dragon
 

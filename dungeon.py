@@ -111,10 +111,7 @@ class DungeonRollGame:
 
     def utiliser_tresor(self):
         # choix trésor
-        for i in range(len(self.inventaire)):
-            self.afficher(str(i) + " : " + str(self.inventaire[i]))
-        tresor = self.inventaire[int(self.recuperer("Lequel ?"))]
-        self.afficher("Choisi : " + tresor)
+        tresor = self.choisir_par_index(self.inventaire)
 
         # on le retire tout de suite de l'inventaire
         self.inventaire.remove(tresor)
@@ -125,7 +122,7 @@ class DungeonRollGame:
             self.clore_la_partie()
 
         elif tresor == 'Appat de Dragon':    # transforme les dés monstres en dé dragon:
-            for i in range(len(self.monstres)):
+            for i in enumerate(self.monstres):
                 self.antre_dragon.append("Dragon")
             self.monstres = []
 
@@ -135,11 +132,12 @@ class DungeonRollGame:
         elif tresor == 'Potion':               # permet de récupérer 1 seul dé joueur
             self.afficher("Vous pouvez ressusciter un compagnon")
             # choix du compagnon par l'index
-            index = []
-            for i, key in enumerate(self.compagnons.keys()):
-                self.afficher(str(i) + " : " + key)
-                index.append(key)
-            compagnon = index[int(self.recuperer("Lequel ?"))]
+            compagnon = self.choisir_par_index(list(self.compagnons.keys()))
+            # index = []
+            # for i, key in enumerate(self.compagnons.keys()):
+            #     self.afficher(str(i) + " : " + key)
+            #     index.append(key)
+            # compagnon = index[int(self.recuperer("Lequel ?"))]
 
             # resurection
             self.player_hand.append(compagnon)
@@ -181,7 +179,7 @@ class DungeonRollGame:
                 # rappel de la règle
                 self.afficher("Utilisez un compagnon pour boire une potion qui ressuscitera tous les autres compagnons du cimetière")
 
-                compagnon = self.choisir_compagnon()
+                compagnon = self.choisir_par_index(self.player_hand)
 
                 # ressusciter tous les compagnons
                 for mercenaire in set(self.cimetiere):
@@ -201,7 +199,7 @@ class DungeonRollGame:
                 self.afficher("Utilisez n'importe lequel de vos compagnons pour ouvrir un coffre,")
                 self.afficher("un voleur pour les ouvrirs tous")
 
-                compagnon = self.choisir_compagnon()
+                compagnon = self.choisir_par_index(self.player_hand)
 
                 # action = ouvrir un ou plusieurs coffres
                 if compagnon == "Voleur":
@@ -246,7 +244,7 @@ class DungeonRollGame:
             self.continuer_partie = False
 
     def utiliser_compagnon(self):
-        compagnon = self.choisir_compagnon()
+        compagnon = self.choisir_par_index(self.player_hand)
 
         # retirer le compagnon utilisé et le place au cimetière
         self.player_hand.remove(compagnon)
@@ -257,11 +255,18 @@ class DungeonRollGame:
         else:
             self.bastonner(compagnon)
 
-    def choisir_compagnon(self):
+    def choisir_par_index(self, liste, msg="Lequel ?"):
         # choix du compagnon par l'index
-        for i in range(len(self.player_hand)):
-            self.afficher(str(i) + " : " + str(self.player_hand[i]))
-        return self.player_hand[int(self.recuperer("Lequel ?"))]
+        while True:
+            for i in range(len(liste)):
+                self.afficher(str(i) + " : " + str(liste[i]))
+            choix = int(self.recuperer(msg))
+            if 0 <= choix < len(liste) :
+                choix = liste[choix]
+                self.afficher('Vous avez choisi : ' + choix)
+                return choix
+            else:
+                self.afficher("Mauvaise saisie, recommencez !")
 
     def lancer_dé_MJ(self):
         # Lancer le dé du mj
@@ -320,8 +325,7 @@ class DungeonRollGame:
 
     def bastonner(self, compagnon):
         # choix de la cible
-        self.afficher(self.monstres)
-        cible = self.recuperer("ON BUTE QUI ?")
+        cible = self.choisir_par_index(self.monstres, "ON BUTE QUI ?")
 
         # creation de cadavres
         if cible in self.compagnons[compagnon]:
