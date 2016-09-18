@@ -70,7 +70,34 @@ class DungeonRollGame:
         if self.exploration == "Succes":
             # calcul du score
             self.afficher("Calcul du score")
-            self.afficher("fonction à implémenter :p ")
+
+            # chaque tresor vaut un point
+            score = len(inventaire)
+            # le Town portal en vaut 2
+            for tresor in self.inventaire:
+                if tresor == "Portail de ville":
+                    score += 1
+                        
+            # écailles de dragon : chaque pair vaut 2 pts de plus
+            # 1 ecaille = 0 pt en plus
+            # 2 ecaills = 2 pt en plus
+            # 3 écaills = 2 pt en plus
+            # 4 écailles = impossible, t'as triché :p 4 pt en plus
+            ecailles = 0
+            for tresor in self.inventaire:
+                if tresor = "Ecaille du dragon":
+                    ecailles += 1
+            score += (ecailles // 2) * 2    
+
+            # 1 pt XP = 1 pt score
+            score += self.XP
+
+            # le niveau du donjon 
+            score += self.niveau
+
+            # GREAT, c'est super SCORE !
+            self.afficher("Le score est de : " + str(score))
+
         else:
             self.afficher("C'est la FIN, t'as perdu, 0 point !")
 

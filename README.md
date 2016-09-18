@@ -23,13 +23,17 @@ To be written :)
     * Dragon
       * OK Déclenchement
       * NOK combat (manque gestion des tresors)
-    * Fin de la partie - décompte des points
-    
+    * OK Fin de la partie - décompte des points
+
+  * Combiner plusieurs explorations
+
   
   * Adaptation à irc
     * packaging module sopel
     * entrées et sorties de textes
     * présentation du texte, des aides de jeu 
+    * Publier le score sur tous les channels
+    * enregistrer le high-score
 
 
   * BONUS
