@@ -40,10 +40,12 @@ class DungeonRollGame:
         self.monstres = []
         self.loot = []
         self.player_hand = []
+        self.des_dragons = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
         self.niveau_donjon = 6
         self.niveau_hero = 1
+        self.XP = 0  # mais il s'agit pas de windows
 
     def start(self):
         # Lancement des dés du joueur
@@ -83,14 +85,20 @@ class DungeonRollGame:
         self.loot = []
         for i in range(self.niveau_donjon):
             self.lancer_dé_MJ()
+        self.verifier_dragon()
 
     def gerer_phase_baston(self):
         self.exploration = "Succes"
-        while self.monstres:
+        while self.monstres or self.antre_dragon:
             # afficher les mains
             self.afficher_main_joueur()
             self.afficher_main_MJ()
 
+            # Filtrer les actions possibles :
+            # Dragon : avoir 3 compagnons différents
+            # utiliser Compagnon : avoir des compagnons dispo
+            # etc..
+            
             # Choisir une action 
             possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir", "affronter le DRagon"]
             self.afficher(str(possibilites))
@@ -106,8 +114,38 @@ class DungeonRollGame:
                 self.utiliser_tresor()
             elif choix in ("COmpagnon", "Compagnon", "compagnon", "C", "c"):
                 self.utiliser_compagnon()
+            elif choix in ("DR", "DRagon", "Dr", "dr", "Dragon", "dragon", "D", "d"):
+                self.affronter_dragon()
 
         return self.exploration  # "Echec" ou "Succes"
+
+    def affronter_dragon(self):
+        # il faut 3 bonhommes différents
+        choix1 = self.choisir_par_index(self.compagnons)
+        choix2 = choix1
+        choix3 = choix1
+        while choix2 == choix1:
+            choix2 = self.choisir_par_index(self.compagnons, "choisissez un compagnon différent") 
+        while choix3 == choix2 or choix3 == choix1 :
+            choix3 = self.choisir_par_index(self.compagnons, "choisissez un compagnon différent") 
+
+        # on a 3 compagnons différents
+        self.compagnons.remove(choix1) 
+        self.compagnons.remove(choix2) 
+        self.compagnons.remove(choix3)
+
+        # Tuer le dragon
+        self.antre_dragon = []
+        self.afficher("Couic, dragon bousillé")
+
+        # récupère 1 trésor
+        tresor = random.choice(self.tresor)
+        self.inventaire.append(tresor)
+        self.afficher("Vous avez trouvé : " + str(tresor))
+
+        # gagner 1 pt XP
+        self.XP += 1
+
 
     def utiliser_tresor(self):
         # choix trésor
@@ -123,11 +161,12 @@ class DungeonRollGame:
 
         elif tresor == 'Appat de Dragon':    # transforme les dés monstres en dé dragon:
             for i in enumerate(self.monstres):
-                self.antre_dragon.append("Dragon")
+                self.des_dragon.append("Dragon")
             self.monstres = []
+            self.verifier_dragon()
 
         elif tresor == 'Anneau dinvisibilite': # retire les dés de l'antre du dragon (ne le vainc pas)
-            self.antre_dragon = []
+            self.des_dragon = []
 
         elif tresor == 'Potion':               # permet de récupérer 1 seul dé joueur
             self.afficher("Vous pouvez ressusciter un compagnon")
@@ -160,6 +199,9 @@ class DungeonRollGame:
 
         elif tresor == 'Ecaille du dragon':    # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
             self.afficher("les Ecailles du dragon comptent dans le décompte des points à la fin de la partie")
+            self.inventaire.append("Ecaille du dragon")
+            #Retour phase baston car les ecailles ne servent pas au combat
+            #elf.gere_phase_baston()
 
     def piller_butin(self):
         while True:
@@ -323,6 +365,8 @@ class DungeonRollGame:
         self.afficher("Vous avez choisi de relancer : " + choix)
         self.afficher(ajouté + " a été tiré")
 
+        self.verifier_dragon()
+
     def bastonner(self, compagnon):
         # choix de la cible
         cible = self.choisir_par_index(self.monstres, "ON BUTE QUI ?")
@@ -336,13 +380,19 @@ class DungeonRollGame:
             # on n'en supprime qu'un
             self.monstres.remove(cible)
 
+    def verifier_dragon(self):
+        if len(self.des_dragon) >= 3:
+            self.afficher("AND HIS NAME IS BIG DRAGON")
+            self.des_dragon = []
+            self.antre_dragon.append("Dragon") 
+
     def afficher_main_joueur(self):
         self.afficher("main joueur : " + str(self.player_hand))
         self.afficher("cimetiere : " + str(self.cimetiere))
         self.afficher("inventaire : " + str(self.inventaire))
 
     def afficher_main_MJ(self):
-        self.afficher(str(self.antre_dragon) + str(self.loot) + str(self.monstres))
+        self.afficher(str(self.antre_dragon) + str(self.des_dragon) + str(self.loot) + str(self.monstres))
 
     def afficher(self, msg):
         print(msg)
