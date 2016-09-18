@@ -21,8 +21,8 @@ To be written :)
         * OK - utilisation des objets trésors
       * OK - phase regroupement
     * Dragon
-      * Déclenchement
-      * combat
+      * OK Déclenchement
+      * NOK combat (manque gestion des tresors)
     * Fin de la partie - décompte des points
     
   
@@ -46,5 +46,5 @@ To be written :)
   * FIXED - Choix du monstre à tuer : se fait par un string, pas de vérification de s'il y a un élément portant ce nom => mettre en place un système par index
   * FIXED - saisie d'index hors gamme/hout-of-range => exception non gérée
   * Possibilité d'utiliser les outils de voleur hors baston, pour ouvrir DES coffres par ex ?
-  * ne pas pouvoir utiliser les écailles de dragon
+  * FIXED ne pas pouvoir utiliser les écailles de dragon
 
