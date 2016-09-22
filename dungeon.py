@@ -2,16 +2,37 @@ import random
 
 
 class DungeonRollGame:
+
+    class Déjoueur:
+        """Structure d'organisation des dés du joueur, de qu'il est possible de faire avec un dé"""
+        def __init__(self, nom, action_type):
+            self.nom = nom
+            self.action_type = action_type
+
     def __init__(self):
+        """Initialise une partie de DungeonRoll"""
+
         # Declaration des items trouvables dans les dés et des loot pour les random
-        self.compagnons = {
-            "Guerrier"  : [ "Gobelin" ],
-            "Voleur"    : [],
-            "Mage"      : [ "Blob" ],
-            "Clerc"     : [ "Squelette" ],
-            "Champion"  : [ "Gobelin", "Blob", "Squelette"],
-            "Parchemin" : []
-        }
+        self.compagnons = [
+            self.Déjoueur("Guerrier", "Guerrier"),
+            self.Déjoueur("Voleur", "Voleur"),
+            self.Déjoueur("Mage", "Mage"),
+            self.Déjoueur("Clerc", "Clerc"),
+            self.Déjoueur("Champion", "Champion"),
+            self.Déjoueur("Parchemin", "Parchemin")
+        ]
+        self.tresor = [
+            self.Déjoueur('Portail de ville', "Portail de ville"),             # Fin de la partie avec décompte des points
+            self.Déjoueur('Appat de Dragon', "Appat de Dragon"),               # transforme les dés monstres en dé dragon
+            self.Déjoueur("Anneau d'invisibilité", "Anneau d'invisibilité"),   # retire les dés de l'antre du dragon (ne le vainc pas)
+            self.Déjoueur('Potion', "Potion"),                                 # permet de récupérer 1 seul dé joueur
+            self.Déjoueur('Parchemin', "Parchemin"),                           # = dé parchemin
+            self.Déjoueur('Epée Vorpale', "Guerrier"),                         # = dé guerrier
+            self.Déjoueur('Talisman', "Clerc"),                                # = dé clerc
+            self.Déjoueur('Sceptre de Pouvoir', "Mage"),                       # = dé mage
+            self.Déjoueur('Outil de Voleur', "Voleur"),                        # = dé voleur
+            self.Déjoueur('Ecaille du dragon', "Ecaille du dragon")            # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
+        ]
         self.mjdice = [
             'Gobelin',
             'Blob',
@@ -20,18 +41,6 @@ class DungeonRollGame:
             'Dragon',
             'Potion'        # Utiliser un compagnon pour récupérer, Usage immédiat, réssuscite tous les compagnons du cimetière
         ]
-        self.tresor = [
-                'Portail de ville',     # Fin de la partie avec décompte des points
-                'Appat de Dragon',      # transforme les dés monstres en dé dragon
-                'Anneau dinvisibilite', # retire les dés de l'antre du dragon (ne le vainc pas)
-                'Potion',               # permet de récupérer 1 seul dé joueur
-                'Parchemin',            # = dé parchemin
-                'Epee Vorpale',         # = dé guerrier
-                'Talisman',             # = dé clerc
-                'Sceptre de Pouvoir',   # = dé mage 
-                'Outil de Voleur',      # = dé voleur
-                'Ecaille du dragon'     # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
-                ]
 
         # Initialisation des différents conteneurs de dés ou objets
         self.inventaire = []
@@ -47,12 +56,17 @@ class DungeonRollGame:
         self.niveau_hero = 1
         self.XP = 0  # mais il s'agit pas de windows
 
+        # Déclaration des états de la partie
+        self.continuer_partie = False
+        self.exploration = "Echec"
+
     def start(self):
+        """Lance une partie de DungeonRoll"""
         # Lancement des dés du joueur
         self.afficher(
-            "Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne")
+            "Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne :")
         for i in range(1, 7):
-            self.lancer_dé_joueur()
+            self.lance_dé_joueur()
 
         # Tour de jeu
         self.continuer_partie = True
@@ -72,7 +86,7 @@ class DungeonRollGame:
             self.afficher("Calcul du score")
 
             # chaque tresor vaut un point
-            score = len(inventaire)
+            score = len(self.inventaire)
             # le Town portal en vaut 2
             for tresor in self.inventaire:
                 if tresor == "Portail de ville":
@@ -85,7 +99,7 @@ class DungeonRollGame:
             # 4 écailles = impossible, t'as triché :p 4 pt en plus
             ecailles = 0
             for tresor in self.inventaire:
-                if tresor = "Ecaille du dragon":
+                if tresor == "Ecaille du dragon":
                     ecailles += 1
             score += (ecailles // 2) * 2    
 
@@ -147,7 +161,7 @@ class DungeonRollGame:
         return self.exploration  # "Echec" ou "Succes"
 
     def affronter_dragon(self):
-        # il faut 3 bonhommes différents
+        """il faut 3 bonhommes différents"""
         choix1 = self.choisir_par_index(self.compagnons)
         choix2 = choix1
         choix3 = choix1
@@ -327,7 +341,7 @@ class DungeonRollGame:
     def choisir_par_index(self, liste, msg="Lequel ?"):
         # choix du compagnon par l'index
         while True:
-            for i in range(len(liste)):
+            for i in enumerate(liste):
                 self.afficher(str(i) + " : " + str(liste[i]))
             choix = int(self.recuperer(msg))
             if 0 <= choix < len(liste) :
@@ -338,8 +352,9 @@ class DungeonRollGame:
                 self.afficher("Mauvaise saisie, recommencez !")
 
     def lancer_dé_MJ(self):
-        # Lancer le dé du mj
+        """Lance un dé du MJ, et l'ajoute dans la bonne main du MJ, retourne le dé tiré"""
         lancer_de = random.choice(self.mjdice)
+        # on range le dé dans le bon conteneur selon le type tiré
         if lancer_de == "Dragon":
             self.antre_dragon.append(lancer_de)
         elif lancer_de in ("Coffre", "Potion"):
@@ -348,8 +363,9 @@ class DungeonRollGame:
             self.monstres.append(lancer_de)
         return lancer_de
 
-    def lancer_dé_joueur(self):
-        lancer_dé = random.choice(list(self.compagnons.keys()))
+    def lance_dé_joueur(self):
+        """Lance un Déjoueur et l'ajoute dans la main du joueur, retourne le dé tiré"""
+        lancer_dé = random.choice(self.compagnons)
         self.player_hand.append(lancer_dé)
         return lancer_dé
 
@@ -358,7 +374,7 @@ class DungeonRollGame:
         self.afficher("Vous pouvez relancer un dé")
 
         # afficher avec un index successivement les mains du joueur, du mj (loot, monstres)
-        for i in range(len(self.player_hand) + len(self.loot) + len(self.monstres)):
+        for i in enumerate(self.player_hand + self.loot + self.monstres):
             if i < len(self.player_hand):
                 self.afficher(str(i) + " : " + str(self.player_hand[i]))
             elif i < len(self.player_hand) + len(self.loot):
@@ -376,7 +392,7 @@ class DungeonRollGame:
             # player_hand
             choix = self.player_hand[choix]
             self.player_hand.remove(choix)
-            ajouté = self.lancer_dé_joueur()
+            ajouté = self.lance_dé_joueur()
         elif choix < len(self.player_hand) + len(self.loot):
             # loot
             choix = self.loot[choix - len(self.player_hand)]
