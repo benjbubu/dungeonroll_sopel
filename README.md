@@ -1,4 +1,4 @@
-# dungeonroll_sopel
+## dungeonroll_sopel
 A Boardgame adaptation of DungeonRoll in Sopel IRC
 
 ## Description du jeu
@@ -17,12 +17,13 @@ To be written :)
       * phase butin
         * récupérer le loot
             * OK - utilisation d'un compagnon
-            * utilisation d'un objet/tresor ?
+            * utilisation d'un objet/tresor (OK pour les coffres, pour les potions aussi ?) 
         * OK - utilisation des objets trésors
       * OK - phase regroupement
-    * Dragon
+    * OK Dragon
       * OK Déclenchement
-      * NOK combat (manque gestion des tresors)
+      * OK combat en utilisant 3 objets/compagnons différents
+      * OK Vérifier la possibilité d'avoir 3 acteurs différents
     * OK Fin de la partie - décompte des points
 
   * Combiner plusieurs explorations

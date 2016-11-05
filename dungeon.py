@@ -3,10 +3,11 @@ import random
 
 class DungeonRollGame:
 
-    class Déjoueur:
+    class DéJoueur:
         """Structure d'organisation des dés du joueur, de qu'il est possible de faire avec un dé"""
-        def __init__(self, nom, action_type, cible_favorite=None):
+        def __init__(self, nom, type_dé, action_type=None, cible_favorite=None):
             self.nom = nom
+            self.type_dé = type_dé
             self.action_type = action_type
             self.cible_favorite = cible_favorite
 
@@ -16,29 +17,33 @@ class DungeonRollGame:
         def __repr__(self):
             return self.nom
 
+    class MainJoueur:
+        pass
+        # à développer pour optimiser (avec prise en charge de l'inventaire, du cimetière ..)
+
     def __init__(self):
         """Initialise une partie de DungeonRoll"""
 
         # Declaration des items trouvables dans les dés et des loot pour les random
         self.compagnons = [
-            self.Déjoueur("Guerrier", "Guerrier", "Gobelin"),
-            self.Déjoueur("Voleur", "Voleur"),
-            self.Déjoueur("Mage", "Mage", "Blob"),
-            self.Déjoueur("Clerc", "Clerc", "Squelette"),
-            self.Déjoueur("Champion", "Champion", ("Squelette", "Blob", "Gobelin")),
-            self.Déjoueur("Parchemin", "Parchemin")     # On peut relancer autant de dé qu'on veut
+            self.DéJoueur("Guerrier", "Compagnon", "Guerrier", "Gobelin"),
+            self.DéJoueur("Voleur", "Compagnon", "Voleur"),
+            self.DéJoueur("Mage", "Compagnon", "Mage", "Blob"),
+            self.DéJoueur("Clerc", "Compagnon", "Clerc", "Squelette"),
+            self.DéJoueur("Champion", "Compagnon", "Champion", ("Squelette", "Blob", "Gobelin")),
+            self.DéJoueur("Parchemin", "Compagnon", "Parchemin")     # On peut relancer autant de dé qu'on veut
         ]
-        self.tresor = [
-            self.Déjoueur('Portail de ville', "Portail de ville"),             # Fin de la partie avec décompte des points
-            self.Déjoueur('Appat de Dragon', "Appat de Dragon"),               # transforme les dés monstres en dé dragon
-            self.Déjoueur("Anneau d'invisibilité", "Anneau d'invisibilité"),   # retire les dés de l'antre du dragon (ne le vainc pas)
-            self.Déjoueur('Potion', "Potion"),                                 # permet de récupérer 1 seul dé joueur
-            self.Déjoueur('Parchemin', "Parchemin"),                           # = dé parchemin
-            self.Déjoueur('Epée Vorpale', "Guerrier", "Gobelin"),                         # = dé guerrier
-            self.Déjoueur('Talisman', "Clerc", "Squelette"),                                # = dé clerc
-            self.Déjoueur('Sceptre de Pouvoir', "Mage", "Blob"),                       # = dé mage
-            self.Déjoueur('Outil de Voleur', "Voleur"),                        # = dé voleur
-            self.Déjoueur('Ecaille du dragon', "Ecaille du dragon")            # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
+        self.tresors = [
+            self.DéJoueur('Portail de ville', "Trésor", "Portail de ville"),             # Fin de la partie avec décompte des points
+            self.DéJoueur('Appat de Dragon', "Trésor", "Appat de Dragon"),               # transforme les dés monstres en dé dragon
+            self.DéJoueur("Anneau d'invisibilité", "Trésor", "Anneau d'invisibilité"),   # retire les dés de l'antre du dragon (ne le vainc pas)
+            self.DéJoueur('Potion', "Trésor", "Potion"),                                 # permet de récupérer 1 seul dé joueur
+            self.DéJoueur('Parchemin', "Trésor", "Parchemin"),                           # = dé parchemin
+            self.DéJoueur('Epée Vorpale', "Trésor", "Guerrier", "Gobelin"),              # = dé guerrier
+            self.DéJoueur('Talisman', "Clerc", "Trésor", "Squelette"),                   # = dé clerc
+            self.DéJoueur('Sceptre de Pouvoir', "Trésor", "Mage", "Blob"),               # = dé mage
+            self.DéJoueur('Outil de Voleur', "Trésor", "Voleur"),                        # = dé voleur
+            self.DéJoueur('Ecaille du dragon', "Trésor", "Ecaille du dragon")            # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
         ]
         self.mjdice = [
             'Gobelin',
@@ -50,7 +55,6 @@ class DungeonRollGame:
         ]
 
         # Initialisation des différents conteneurs de dés ou objets
-        self.inventaire = []
         self.cimetiere = []
         self.antre_dragon = []
         self.monstres = []
@@ -85,16 +89,18 @@ class DungeonRollGame:
         self.clore_la_partie()
 
     def clore_la_partie(self):
-        # Fin de la partie => calcul score
+        """Fin de la partie => calcul score"""
         self.afficher("C'est la FIN")
+
         if self.exploration == "Succes":
             # calcul du score
             self.afficher("Calcul du score")
 
             # chaque tresor vaut un point
-            score = len(self.inventaire)
+            inventaire = [i for i in self.player_hand if i.type_dé == "Trésor"]
+            score = len(inventaire)
             # le Town portal en vaut 2
-            for tresor in self.inventaire:
+            for tresor in inventaire:
                 if tresor == "Portail de ville":
                     score += 1
                         
@@ -104,9 +110,9 @@ class DungeonRollGame:
             # 3 écaills = 2 pt en plus
             # 4 écailles = impossible, t'as triché :p 4 pt en plus
             ecailles = 0
-            for tresor in self.inventaire:
+            for tresor in inventaire:
                 if tresor == "Ecaille du dragon":
-                    ctecailles += 1
+                    ecailles += 1
             score += (ecailles // 2) * 2    
 
             # 1 pt XP = 1 pt score
@@ -115,7 +121,7 @@ class DungeonRollGame:
             # le niveau du donjon 
             score += self.niveau_donjon
 
-            # GREAT, c'est super SCORE !
+            # GREAT, c'est un super SCORE !
             self.afficher("Le score est de : " + str(score))
 
         else:
@@ -125,6 +131,7 @@ class DungeonRollGame:
         exit()
 
     def entrer_dans_donjon(self):
+        """Arrivée dans un nouveau niveau du donjon"""
         self.afficher("Vous arrivez au niveau " + str(self.niveau_donjon) + ". Des monstres apparaissent !")
 
         # Lancement de des du MJ
@@ -135,13 +142,18 @@ class DungeonRollGame:
         self.verifier_dragon()
 
     def gerer_phase_baston(self):
+        """Faut bousiller tous les monstres avant de continuer"""
+
+        # par défaut on réussit car il y a un seul critère d'échec: la fuite
         self.exploration = "Succes"
+
+        # boucle tant qu'il y a des monstres ou un dragon
         while self.monstres or self.antre_dragon:
             # afficher les mains
             self.afficher_main_joueur()
             self.afficher_main_MJ()
 
-            # Filtrer les actions possibles :
+            # Filtrer les actions possibles : TBD
             # Dragon : avoir 3 compagnons différents
             # utiliser Compagnon : avoir des compagnons dispo
             # etc..
@@ -168,38 +180,39 @@ class DungeonRollGame:
 
     def affronter_dragon(self):
         """il faut 3 bonhommes différents"""
-        choix1 = self.choisir_par_index(self.compagnons)
-        choix2 = choix1
-        choix3 = choix1
-        while choix2 == choix1:
-            choix2 = self.choisir_par_index(self.compagnons, "choisissez un compagnon différent") 
-        while choix3 == choix2 or choix3 == choix1 :
-            choix3 = self.choisir_par_index(self.compagnons, "choisissez un compagnon différent") 
 
-        # on a 3 compagnons différents
-        self.compagnons.remove(choix1) 
-        self.compagnons.remove(choix2) 
-        self.compagnons.remove(choix3)
+        # on vérifie qu'on a trois choses différentes en passant par un ensemble (ne contient que des objets uniques)
+        main_objets_uniques = set(self.player_hand)
+        if len(main_objets_uniques) < 3 :
+            self.afficher("Combat contre le dragon impossible, vous n'avez pas 3 compagnons/objets différents")
+            return
+
+       # on choisit 3 "objets" différents (grace à l'ensemble)
+        for i in range(0,3):
+            choix = self.choisir_par_index(main_objets_uniques)
+            main_objets_uniques.remove(choix)
+            self.player_hand.remove(choix)
 
         # Tuer le dragon
         self.antre_dragon = []
         self.afficher("Couic, dragon bousillé")
 
         # récupère 1 trésor
-        tresor = random.choice(self.tresor)
-        self.inventaire.append(tresor)
+        tresor = random.choice(self.tresors)
+        self.player_hand.append(tresor)
         self.afficher("Vous avez trouvé : " + str(tresor))
 
         # gagner 1 pt XP
         self.XP += 1
 
-
     def utiliser_tresor(self):
+        inventaire = [i for i in self.player_hand if i.type_dé == "Trésor"]
+
         # choix trésor
-        tresor = self.choisir_par_index(self.inventaire)
+        tresor = self.choisir_par_index(inventaire)
 
         # on le retire tout de suite de l'inventaire
-        self.inventaire.remove(tresor)
+        self.player_hand.remove(tresor)
 
         # résolution de l'action du trésor
         if tresor == 'Portail de ville':     # Fin de la partie avec décompte des points
@@ -246,11 +259,10 @@ class DungeonRollGame:
 
         elif tresor == 'Ecaille du dragon':    # chaque écaille vaut 1 pt XP, chaque paire vaut +2 XP
             self.afficher("les Ecailles du dragon comptent dans le décompte des points à la fin de la partie")
-            self.inventaire.append("Ecaille du dragon")
-            #Retour phase baston car les ecailles ne servent pas au combat
-            #elf.gere_phase_baston()
+            self.player_hand.append("Ecaille du dragon")
 
     def piller_butin(self):
+        """Les monstres vaincus, on peut piller la salle"""
         while True:
             # Reste-t-il du loot ?
             if not self.loot:
@@ -292,10 +304,12 @@ class DungeonRollGame:
                 self.afficher("Utilisez n'importe lequel de vos compagnons pour ouvrir un coffre,")
                 self.afficher("un voleur pour les ouvrir tous")
 
-                compagnon = self.choisir_par_index(self.player_hand)
+                dé_utilisables = [i for i in self.player_hand if i.cible_favorite is not None]
+
+                dé = self.choisir_par_index(dé_utilisables)
 
                 # action = ouvrir un ou plusieurs coffres
-                if compagnon.action_type == "Voleur":
+                if dé.action_type == "Voleur":
                     # décompte du nombre de coffres
                     nb_coffres = self.loot.count("Coffre")
 
@@ -306,9 +320,10 @@ class DungeonRollGame:
                     if "Coffre" in self.loot:
                         self.ouvrir_coffre()
 
-                # retirer le compagnon utilisé et le placer au cimetière
-                self.player_hand.remove(compagnon)
-                self.cimetiere.append(compagnon)
+                # retirer le dé utilisé et le placer au cimetière si c'est un compagnon
+                self.player_hand.remove(dé)
+                if dé.type_dé == "Compagnon":
+                    self.cimetiere.append(dé)
 
             elif choix in ("ABandonner", "Abandonner", "abandonner", "AB", "Ab", "ab", "A", "a"):
                 break
@@ -317,8 +332,8 @@ class DungeonRollGame:
         self.loot.remove("Coffre")
 
         # tirer trésor
-        tresor = random.choice(self.tresor)
-        self.inventaire.append(tresor)
+        tresor = random.choice(self.tresors)
+        self.player_hand.append(tresor)
         self.afficher("Vous avez trouvé : " + str(tresor))
 
     def reflechir_avenir(self):
@@ -377,23 +392,25 @@ class DungeonRollGame:
         return lancer_de
 
     def lance_dé_joueur(self):
-        """Lance un Déjoueur et l'ajoute dans la main du joueur, retourne le dé tiré"""
+        """Lance un DéJoueur et l'ajoute dans la main du joueur, retourne le dé tiré"""
         lancer_dé = random.choice(self.compagnons)
         self.player_hand.append(lancer_dé)
         return lancer_dé
 
-    def utiliser_parchemin(self, source):
+    def utiliser_parchemin(self):
         # Gestion du cas parchemin : on relance un dé quelqu'il soit sauf Dragon
         self.afficher("Vous pouvez relancer un dé")
 
+        compagnons = [i for i in self.player_hand if i.type_dé == "Compagnon"]
+
         # afficher avec un index successivement les mains du joueur, du mj (loot, monstres)
-        for i in range(len(self.player_hand) + len(self.loot) + len(self.monstres)):
-            if i < len(self.player_hand):
-                self.afficher(str(i) + " : " + str(self.player_hand[i]))
-            elif i < len(self.player_hand) + len(self.loot):
-                self.afficher(str(i) + " : " + str(self.loot[i - len(self.player_hand)]))
+        for i in range(len(compagnons) + len(self.loot) + len(self.monstres)):
+            if i < len(compagnons):
+                self.afficher(str(i) + " : " + str(compagnons[i]))
+            elif i < len(compagnons) + len(self.loot):
+                self.afficher(str(i) + " : " + str(self.loot[i - len(compagnons)]))
             else:
-                self.afficher(str(i) + " : " + str(self.monstres[i - len(self.player_hand) - len(self.loot)]))
+                self.afficher(str(i) + " : " + str(self.monstres[i - len(compagnons) - len(self.loot)]))
 
         # choisir le dé à relancer
         choix = self.recuperer("Quel dé voulez-vous relancer ?")
@@ -401,19 +418,19 @@ class DungeonRollGame:
 
         # enlever ce dé et selon la catégorie relancer le dé et l'affecter dans la bonne main
         ajouté = ""
-        if choix < len(self.player_hand):
+        if choix < len(compagnons):
             # player_hand
-            choix = self.player_hand[choix]
+            choix = compagnons[choix]
             self.player_hand.remove(choix)
             ajouté = self.lance_dé_joueur()
-        elif choix < len(self.player_hand) + len(self.loot):
+        elif choix < len(compagnons) + len(self.loot):
             # loot
-            choix = self.loot[choix - len(self.player_hand)]
+            choix = self.loot[choix - len(compagnons)]
             self.loot.remove(choix)
             ajouté = self.lancer_dé_MJ()
         else:
             # monstres
-            choix = self.monstres[choix - len(self.player_hand) - len(self.loot)]
+            choix = self.monstres[choix - len(compagnons) - len(self.loot)]
             self.monstres.remove(choix)
             ajouté = self.lancer_dé_MJ()
 
@@ -441,12 +458,15 @@ class DungeonRollGame:
         if len(self.des_dragon) >= 3:
             self.afficher("AND HIS NAME IS BIG DRAGON")
             self.des_dragon = []
-            self.antre_dragon.append("Dragon") 
+            self.antre_dragon.append("Dragon")
 
     def afficher_main_joueur(self):
-        self.afficher("main joueur : " + str(self.player_hand))
+        compagnons = [dé for dé in self.player_hand if dé.type_dé == "Compagnon"]
+        trésors = [i for i in self.player_hand if i.type_dé == "Trésor"]
+        self.afficher("Compagnons : " + str(compagnons))
         self.afficher("cimetiere : " + str(self.cimetiere))
-        self.afficher("inventaire : " + str(self.inventaire))
+        self.afficher("inventaire : " + str(trésors))
+        return
 
     def afficher_main_MJ(self):
         self.afficher("Antre du dragon : " + str(self.antre_dragon))
