@@ -504,7 +504,7 @@ class DungeonRollGame:
         # playing in console
         # print(msg)
 
-        self.bot.notice(msg, "#game")
+        self.bot.say(msg, "#game")
 
     def recuperer(self, msg):
         """méthode pour récupérer les input du joueur. Surveille aussi les demandes de fin de partie"""
@@ -551,18 +551,24 @@ def dungeon(bot, trigger):
     global INSTANCE, EN_COURS, JOUEUR
 
     if not trigger.group(2):
-        return bot.reply("mauvaise commande, essaie .help dungeon")
+        for msg in [".dungeon start : lance le jeu",
+                    ".dungeon stop : interrompt le jeu",
+                    ".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..",
+                    ".dungeon highscore : affiche le meilleur score",
+                    ".dungeon stats : afficher les stats des joueurs"]:
+            bot.say(msg)
+        return
 
     # tri des commandes
     cmd = trigger.group(2)
     if cmd == "start":
         # on ne commence une partie que si on est sur le canal #game
         if trigger.sender != "#game":
-            return bot.reply("la partie ne peut se jouer que dans le canal #game")
+            return bot.say("la partie ne peut se jouer que dans le canal #game")
 
         # on vérifie si une partie n'est pas déjà en cours
         if EN_COURS:
-            return bot.reply("Une partie est déjà en cours")
+            return bot.say("Une partie est déjà en cours")
 
         # il n'y a pas de partie en cours, on peut en commencer une
         JOUEUR = trigger.nick
@@ -580,18 +586,18 @@ def dungeon(bot, trigger):
             return
 
     elif cmd == "etat":
-        return bot.reply("Fonction non implémentée")
+        return bot.say("Fonction non implémentée")
     elif cmd == "highscore":
-        return bot.reply("Fonction non implémentée")
+        return bot.say("Fonction non implémentée")
     elif cmd == "stats":
-        return bot.reply("Fonction non implémentée")
+        return bot.say("Fonction non implémentée")
     else:
         for msg in [".dungeon start : lance le jeu",
                     ".dungeon stop : interrompt le jeu",
                     ".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..",
                     ".dungeon highscore : affiche le meilleur score",
                     ".dungeon stats : afficher les stats des joueurs"]:
-            bot.reply(msg)
+            bot.say(msg)
         return
 
 
