@@ -1,7 +1,23 @@
+"""
+DungeonRoll_sopel, le jeu de dés Dungeon Roll adapté pour irc
+Auteurs: Kuun-Lann & Louc
+2016
+"""
+
+# dépendances pour le jeu
 import random
+from time import sleep  # pour la version irc
+
+# dépendances pour irc (sopel)
+import sopel.module
+from sopel.module import commands, thread, rule, example
 
 
 class DungeonRollGame:
+
+    class QuitOrderException(Exception):
+        def __init__(self):
+            super().__init__(self)
 
     class DéJoueur:
         """Structure d'organisation des dés du joueur, de qu'il est possible de faire avec un dé"""
@@ -21,8 +37,11 @@ class DungeonRollGame:
         pass
         # à développer pour optimiser (avec prise en charge de l'inventaire, du cimetière ..)
 
-    def __init__(self):
+    def __init__(self, bot):
         """Initialise une partie de DungeonRoll"""
+
+        # Pour permettre les réponses sur irc
+        self.bot = bot
 
         # Declaration des items trouvables dans les dés et des loot pour les random
         self.compagnons = [
@@ -68,6 +87,9 @@ class DungeonRollGame:
         self.XP = 0  # mais il s'agit pas de windows
 
         # Déclaration des états de la partie
+        self.attente_joueur = False
+        self.msg_joueur = ""
+        self.stop = False
         self.continuer_partie = False
         self.exploration = "Echec"
 
@@ -80,13 +102,16 @@ class DungeonRollGame:
             self.lance_dé_joueur()
 
         # Tour de jeu
-        self.continuer_partie = True
-        while self.continuer_partie:
-            self.entrer_dans_donjon()
-            if self.gerer_phase_baston() == "Succes":
-                self.piller_butin()
-                self.reflechir_avenir()
-        self.clore_la_partie()
+        try:
+            self.continuer_partie = True
+            while self.continuer_partie:
+                self.entrer_dans_donjon()
+                if self.gerer_phase_baston() == "Succes":
+                    self.piller_butin()
+                    self.reflechir_avenir()
+            self.clore_la_partie()
+        except self.QuitOrderException:
+            self.afficher("Le jeu s'arrête brutalement, aucun score n'est enregistré")
 
     def clore_la_partie(self):
         """Fin de la partie => calcul score"""
@@ -128,7 +153,7 @@ class DungeonRollGame:
             self.afficher("C'est la FIN, t'as perdu, 0 point !")
 
         # peut être un peu violent ? ça marche en console en tt cas
-        exit()
+        #exit()
 
     def entrer_dans_donjon(self):
         """Arrivée dans un nouveau niveau du donjon"""
@@ -475,12 +500,123 @@ class DungeonRollGame:
         self.afficher("Monstres : " + str(self.monstres))
 
     def afficher(self, msg):
-        print(msg)
+        """méthode pour afficher les textes du jeu au joueur"""
+        # playing in console
+        # print(msg)
+
+        self.bot.notice(msg, "#game")
 
     def recuperer(self, msg):
-        return input(msg + " : ")
+        """méthode pour récupérer les input du joueur. Surveille aussi les demandes de fin de partie"""
+
+        # playing in console
+        # return input(msg + " : ")
+
+        # indique qu'on attend qque chose
+        self.attente_joueur = True
+        self.msg_joueur = ""
+
+        # on prévient le joueur qu'on attend sa réponse
+        self.afficher(msg)
+
+        # attente de la réponse du joueur
+        while True:
+            # réponse du joueur
+            if self.msg_joueur != "":
+                break
+
+            # ordre d'arrêter
+            if self.stop:
+                raise self.QuitOrderException()
+
+            # petite pause pour pas monopoliser les ressources
+            sleep(0.2)
+
+        self.attente_joueur = False
+        self.msg_joueur = ""
+        return self.msg_joueur
+
+
+# Variables globales décrivant l'état du jeu
+INSTANCE = None
+EN_COURS = False
+JOUEUR = None      # nickname du joueur
+
+
+# pour interagir avec le jeu : le lancer, l'arreter, voir son état
+@commands("dungeon")
+@example(".dungeon start : lance le jeu")
+@example(".dungeon stop : interrompt le jeu")
+@example(".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..")
+@example(".dungeon highscore : affiche le meilleur score")
+@example(".dungeon stats : afficher les stats des joueurs")
+@thread(True)  # non bloquant, permet d'executer simultanément d'autres triggers sopel
+def dungeon(bot, trigger):
+    """Commande pour piloter le jeu dungeon roll"""
+    global INSTANCE, EN_COURS, JOUEUR
+
+    if not trigger.group(2):
+        return bot.reply("mauvaise commande, essaie .help dungeon")
+
+    # tri des commandes
+    cmd = trigger.group(2)
+    if cmd == "start":
+        # on ne commence une partie que si on est sur le canal #game
+        if trigger.sender != "#game":
+            return bot.reply("la partie ne peut se jouer que dans le canal #game")
+
+        # on vérifie si une partie n'est pas déjà en cours
+        if EN_COURS:
+            return bot.reply("Une partie est déjà en cours")
+
+        # il n'y a pas de partie en cours, on peut en commencer une
+        JOUEUR = trigger.nick
+        EN_COURS = True
+        INSTANCE = DungeonRollGame(bot)
+        INSTANCE.start()
+        EN_COURS = False
+
+    elif cmd == "stop":
+        """on arrete brutalement le jeu"""
+        # on vérifie que le jeu est bien en cours
+        if EN_COURS:
+            INSTANCE.stop = True
+            EN_COURS = False
+            return
+
+    elif cmd == "etat":
+        return bot.reply("Fonction non implémentée")
+    elif cmd == "highscore":
+        return bot.reply("Fonction non implémentée")
+    elif cmd == "stats":
+        return bot.reply("Fonction non implémentée")
+    else:
+        return bot.reply("mauvaise commande, essaie .help dungeon")
+
+
+# pour les interactions requises par le jeu
+@rule('(^[^\.])+.*')  # on récupère tout ce qui n'est ni vide, ni commençant par un '.'
+def interagir_dungeon(bot, trigger):
+    """Pour que le jeu récupère les input des joueurs"""
+    global INSTANCE, EN_COURS, JOUEUR
+
+    # on n'écoute que si le jeu est en cours
+    if EN_COURS:
+        return
+
+    # on n'écoute que le joueur de la partie
+    if trigger.nick != JOUEUR:
+        return
+
+    # on n'écoute que si le canal est #game
+    if trigger.sender != "#game":
+        return
+
+    # on transmet ce qu'à dit le joueur à l'instance du jeu si l'INSTANCE attend qque chose
+    if INSTANCE.attente_joueur:
+        INSTANCE.msg_joueur = trigger.group(2)
 
 
 if __name__ == "__main__":
-    partie = DungeonRollGame()
+    partie = DungeonRollGame(None)
     partie.start()

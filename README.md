@@ -30,11 +30,16 @@ To be written :)
 
   
   * Adaptation à irc
-    * packaging module sopel
-    * entrées et sorties de textes
-    * présentation du texte, des aides de jeu 
+    * OK - packaging module sopel
+    * à tester - entrées du joueur
+    * à tester - sorties de textes
+    * présentation du texte pour que ce soit plus fluide/facile
+    * OK - présentation des aides de comamnde du jeu
     * Publier le score sur tous les channels
+    * voir l'état du jeu
+    * voir les stats
     * enregistrer le high-score
+    * OK - permettre d'interrompre le jeu en cours
 
 
   * BONUS
