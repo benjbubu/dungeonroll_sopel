@@ -601,15 +601,15 @@ def interagir_dungeon(bot, trigger):
     global INSTANCE, EN_COURS, JOUEUR
 
     # on n'écoute que si le jeu est en cours
-    if EN_COURS:
-        return
-
-    # on n'écoute que le joueur de la partie
-    if trigger.nick != JOUEUR:
+    if not EN_COURS:
         return
 
     # on n'écoute que si le canal est #game
     if trigger.sender != "#game":
+        return
+
+    # on n'écoute que le joueur de la partie
+    if trigger.nick != JOUEUR:
         return
 
     # on transmet ce qu'à dit le joueur à l'instance du jeu si l'INSTANCE attend qque chose
