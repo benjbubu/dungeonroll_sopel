@@ -545,14 +545,14 @@ JOUEUR = None      # nickname du joueur
 
 # pour interagir avec le jeu : le lancer, l'arreter, voir son état
 @commands("dungeon")
-@example(".dungeon start : lance le jeu")
-@example(".dungeon stop : interrompt le jeu")
-@example(".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..")
-@example(".dungeon highscore : affiche le meilleur score")
-@example(".dungeon stats : afficher les stats des joueurs")
+@example(".dungeon start : lance le jeu",
+         ".dungeon stop : interrompt le jeu",
+         ".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..",
+         ".dungeon highscore : affiche le meilleur score",
+         ".dungeon stats : afficher les stats des joueurs")
 @thread(True)  # non bloquant, permet d'executer simultanément d'autres triggers sopel
 def dungeon(bot, trigger):
-    """Commande pour piloter le jeu dungeon roll"""
+    """Le jeu de dé Dungeon Roll adapté pour irc. Le but : explorer le donjon et amasser le plus grand score !"""
     global INSTANCE, EN_COURS, JOUEUR
 
     if not trigger.group(2):
