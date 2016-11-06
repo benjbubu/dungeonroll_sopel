@@ -545,11 +545,6 @@ JOUEUR = None      # nickname du joueur
 
 # pour interagir avec le jeu : le lancer, l'arreter, voir son état
 @commands("dungeon")
-@example(".dungeon start : lance le jeu",
-         ".dungeon stop : interrompt le jeu",
-         ".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..",
-         ".dungeon highscore : affiche le meilleur score",
-         ".dungeon stats : afficher les stats des joueurs")
 @thread(True)  # non bloquant, permet d'executer simultanément d'autres triggers sopel
 def dungeon(bot, trigger):
     """Le jeu de dé Dungeon Roll adapté pour irc. Le but : explorer le donjon et amasser le plus grand score !"""
@@ -591,7 +586,13 @@ def dungeon(bot, trigger):
     elif cmd == "stats":
         return bot.reply("Fonction non implémentée")
     else:
-        return bot.reply("mauvaise commande, essaie .help dungeon")
+        for msg in [".dungeon start : lance le jeu",
+                    ".dungeon stop : interrompt le jeu",
+                    ".dungeon etat : pour avoir des détails sur l'instance du jeu (jeu en cours, joueur..",
+                    ".dungeon highscore : affiche le meilleur score",
+                    ".dungeon stats : afficher les stats des joueurs"]:
+            bot.reply(msg)
+        return
 
 
 # pour les interactions requises par le jeu
@@ -614,7 +615,7 @@ def interagir_dungeon(bot, trigger):
 
     # on transmet ce qu'à dit le joueur à l'instance du jeu si l'INSTANCE attend qque chose
     if INSTANCE.attente_joueur:
-        INSTANCE.msg_joueur = trigger.group(2)
+        INSTANCE.msg_joueur = trigger.group(0)
 
 
 if __name__ == "__main__":
