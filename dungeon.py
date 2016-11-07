@@ -399,7 +399,7 @@ class DungeonRollGame:
                     choix = liste[choix]
                     self.afficher('Vous avez choisi : ' + str(choix))
                     return choix
-            except:
+            except ValueError:
                 pass
             else:
                 self.afficher("Mauvaise saisie, recommencez !")
@@ -533,8 +533,9 @@ class DungeonRollGame:
             sleep(0.2)
 
         self.attente_joueur = False
+        msg_joueur = self.msg_joueur
         self.msg_joueur = ""
-        return self.msg_joueur
+        return msg_joueur
 
 
 # Variables globales décrivant l'état du jeu
