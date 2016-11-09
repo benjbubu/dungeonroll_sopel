@@ -82,7 +82,7 @@ class DungeonRollGame:
         self.des_dragon = []
 
         # Declaration du niveau du hero et du donjon au debut du jeu
-        self.niveau_donjon = 6
+        self.niveau_donjon = 1
         self.niveau_hero = 1
         self.XP = 0  # mais il s'agit pas de windows
 
@@ -97,7 +97,13 @@ class DungeonRollGame:
         """Lance une partie de DungeonRoll"""
         # Lancement des dés du joueur
         self.afficher(
-            "Bienvenue dans le Donjon. Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne :")
+            "Bienvenue dans le Donjon.\r\n" +
+            "A vous de l'explorer, vaincre les monstres, piller leur butin, et de vous enfoncer plus profondément dans le donjon\r\n" +
+            "Mais gare au dragon qui rode... (la nuit mais pas seulement)\r\n" +
+            "Saurez vous vous retirez avant qu'il ne soit trop tard ?\r\n" +
+            "\r\n" +
+            "Vous etes niveau " + str(self.niveau_hero) + ". Voyons qui vous accompagne :"
+            )
         for i in range(0, 7):
             self.lance_dé_joueur()
 
@@ -187,7 +193,7 @@ class DungeonRollGame:
             possibilites = ["utiliser un TRésor", "utiliser un COmpagnon", "FUir", "affronter le DRagon"]
             self.afficher(str(possibilites))
             choix = self.recuperer("Que souhaitez-vous faire ?")
-            self.afficher("vous avez choisi : " + choix)
+            # self.afficher("vous avez choisi : " + choix)  # on préferera mettre
 
             # Résolution de l'action
             if choix in ("FU", "Fu", "fu", "Fuir", "FUir", "fuir", "F", "f"):
@@ -391,8 +397,10 @@ class DungeonRollGame:
     def choisir_par_index(self, liste, msg="Lequel ?"):
         # choix du compagnon par l'index
         while True:
+            liste = ""
             for i, value in enumerate(liste):
-                self.afficher(str(i) + " : " + str(value))
+                liste += str(i) + " : " + str(value) + "\r\n"
+            self.afficher(liste)
             try:    
                 choix = int(self.recuperer(msg))
                 if 0 <= choix < len(liste) :
